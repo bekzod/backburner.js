@@ -26,12 +26,6 @@ export default class Queue {
 
   public push(target, method, args, stack) {
     this._queue.push(target, method, args, stack);
-
-    return {
-      queue: this,
-      target,
-      method
-    };
   }
 
   public pushUnique(target, method, args, stack) {
@@ -42,12 +36,6 @@ export default class Queue {
     } else {
       this.pushUniqueWithoutGuid(target, method, args, stack);
     }
-
-    return {
-      queue: this,
-      target,
-      method
-    };
   }
 
   public flush(sync?) {

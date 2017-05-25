@@ -45,10 +45,12 @@ export default class DeferredActionQueues {
     }
 
     if (onceFlag) {
-      return queue.pushUnique(target, method, args, stack);
+      queue.pushUnique(target, method, args, stack);
     } else {
-      return queue.push(target, method, args, stack);
+      queue.push(target, method, args, stack);
     }
+
+    return { queue, target, method };
   }
 
   /*
