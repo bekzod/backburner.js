@@ -15,12 +15,27 @@ import iteratorDrain from './backburner/iterator-drain';
 
 import Queue, { QUEUE_STATE } from './backburner/queue';
 
+let id = 0;
+function getId() {
+  return (id++) + '';
+}
+
+function searchTimer(time, timers) {
+  for (var i = 0; i < timers.length; i+=5) {
+    if (time >= timers[i]) {
+      return i;
+    }
+  }
+  return 0;
+}
+
+
 export default class Backburner {
   public static Queue = Queue;
 
   public DEBUG = false;
 
-  public currentInstance: DeferredActionQueues | null | undefined = null;
+  public currentInstance: DeferredActionQueues | null = null;
 
   public options: any;
 
@@ -444,25 +459,7 @@ export default class Backburner {
       }
     }
 
-    let executeAt = now() + wait;
-    let onError = getOnError(this.options);
-
-    let fn;
-    if (onError) {
-      fn = function() {
-        try {
-          method.apply(target, args);
-        } catch (e) {
-          onError(e);
-        }
-      };
-    } else {
-      fn = function() {
-        method.apply(target, args);
-      };
-    }
-
-    return this._setTimeout(fn, executeAt);
+    return this._setTimeout(target, method, args, wait);
   }
 
   public throttle(...args);
@@ -589,15 +586,15 @@ export default class Backburner {
     if (!timer) { return false; }
     let timerType = typeof timer;
 
-    if (timerType === 'number' || timerType === 'string') {
+    if (timerType === 'number') {
       // we're cancelling a throttle or debounce
       return this._cancelItem(timer, this._throttlers) || this._cancelItem(timer, this._debouncees);
     } else if (timerType === 'object' && timer.queue && timer.method) { // we're cancelling a deferOnce
       return timer.queue.cancel(timer);
-    } else if (timerType === 'function') { // we're cancelling a setTimeout
-      for (let i = 0, l = this._timers.length; i < l; i += 2) {
-        if (this._timers[i + 1] === timer) {
-          this._timers.splice(i, 2); // remove the two elements
+    } else if (timerType === 'string') { // we're cancelling a setTimeout
+      for (let i = 0, l = this._timers.length; i < l; i += 5) {
+        if (this._timers[i + 4] === timer) {
+          this._timers.splice(i, 5);
           if (i === 0) {
             this._reinstallTimerTimeout();
           }
@@ -616,24 +613,27 @@ export default class Backburner {
     }
   }
 
-  private _setTimeout(fn, executeAt) {
+  private _setTimeout(target, method, args, wait) {
+    let executeAt = now() + wait;
+    let id = getId()
+
     if (this._timers.length === 0) {
-      this._timers.push(executeAt, fn);
+      this._timers.push(executeAt, target, method, args, id);
       this._installTimerTimeout();
-      return fn;
+      return id;
     }
 
     // find position to insert
     let i = searchTimer(executeAt, this._timers);
 
-    this._timers.splice(i, 0, executeAt, fn);
+    this._timers.splice(i, 0, executeAt, target, method, args, id);
 
     // we should be the new earliest timer if i == 0
     if (i === 0) {
       this._reinstallTimerTimeout();
     }
 
-    return fn;
+    return id;
   }
 
   private _cancelItem(timer, array) {
@@ -676,19 +676,25 @@ export default class Backburner {
   }
 
   private _scheduleExpiredTimers() {
-    let n = now();
-    let timers = this._timers;
     let i = 0;
+    let timers = this._timers;
     let l = timers.length;
-    for (; i < l; i += 2) {
+    let defaultQueue = this.options.defaultQueue;
+    let n = now();
+    let instance = this._ensureInstance();
+    for (; i < l; i += 5) {
       let executeAt = timers[i];
-      let fn = timers[i + 1];
       if (executeAt <= n) {
-        this.schedule(this.options.defaultQueue, null, fn);
+        let target = timers[i + 1];
+        let method = timers[i + 2];
+        let args = timers[i + 3];
+        let stack = this.DEBUG ? new Error() : undefined;
+        instance.schedule(defaultQueue, target, method, args, false, stack);
       } else {
         break;
       }
     }
+
     timers.splice(0, i);
     this._installTimerTimeout();
   }
