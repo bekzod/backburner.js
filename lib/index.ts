@@ -600,7 +600,7 @@ export default class Backburner {
       let executeAt = timers[i];
       if (executeAt <= n) {
         let fn = timers[i + 1];
-        this.schedule(defaultQueue, null, fn);
+        this.schedule(defaultQueue, null, fn, undefined, false);
       } else {
         break;
       }
