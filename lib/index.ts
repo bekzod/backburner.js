@@ -122,7 +122,6 @@ export default class Backburner {
     @return instantiated class DeferredActionQueues
   */
   public begin(): DeferredActionQueues {
-    let options = this.options;
     let previousInstance = this.currentInstance;
     let current;
 
@@ -133,7 +132,7 @@ export default class Backburner {
       if (previousInstance !== null) {
         this.instanceStack.push(previousInstance);
       }
-      current = this.currentInstance = new DeferredActionQueues(this.queueNames, options);
+      current = this.currentInstance = new DeferredActionQueues(this.queueNames, this.options);
       this._trigger('begin', current, previousInstance);
     }
 
@@ -237,14 +236,6 @@ export default class Backburner {
   }
 
   /**
-   * @deprecated please use schedule instead.
-   */
-  public defer(queueName: string, ...args);
-  public defer() {
-    return this.schedule(...arguments);
-  }
-
-  /**
    * Schedule the passed function to run inside the specified queue.
    */
   public schedule(queueName: string, method: Function);
@@ -271,14 +262,6 @@ export default class Backburner {
   }
 
   /**
-   * @deprecated please use scheduleOnce instead.
-   */
-  public deferOnce(queueName: string, ...args);
-  public deferOnce() {
-    return this.scheduleOnce(...arguments);
-  }
-
-  /**
    * Schedule the passed function to run once inside the specified queue.
    */
   public scheduleOnce(queueName: string, method: Function);
@@ -289,14 +272,6 @@ export default class Backburner {
 
     let stack = this.DEBUG ? new Error() : undefined;
     return this._ensureInstance().schedule(queueName, target, method, args, true, stack);
-  }
-
-  /**
-   * @deprecated use later instead.
-   */
-  public setTimeout(...args);
-  public setTimeout() {
-    return this.later(...arguments);
   }
 
   public later()
@@ -489,7 +464,7 @@ export default class Backburner {
       return this._cancelItem(timer, this._throttlers) || this._cancelItem(timer, this._debouncees);
     } else if (timerType === 'function') { // we're cancelling a setTimeout
       return this._cancelLaterTimer(timer);
-    } else if (timerType === 'object' && timer.queue && timer.method) { // we're cancelling a deferOnce
+    } else if (timerType === 'object' && timer.queue && timer.method) { // we're cancelling a scheduleOnce
       return timer.queue.cancel(timer);
     }
 

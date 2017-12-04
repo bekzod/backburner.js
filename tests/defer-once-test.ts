@@ -76,7 +76,7 @@ QUnit.test('throws when passed an undefined method', function(assert) {
     onError
   });
 
-  bb.run(() => bb.deferOnce('deferErrors', {zomg: 'hi'}, undefined));
+  bb.run(() => bb.scheduleOnce('deferErrors', {zomg: 'hi'}, undefined));
 });
 
 QUnit.test('throws when passed an method name that does not exists on the target', function(assert) {
@@ -90,7 +90,7 @@ QUnit.test('throws when passed an method name that does not exists on the target
     onError
   });
 
-  bb.run(() => bb.deferOnce('deferErrors', {zomg: 'hi'}, 'checkFunction'));
+  bb.run(() => bb.scheduleOnce('deferErrors', {zomg: 'hi'}, 'checkFunction'));
 });
 
 QUnit.test('when passed a target, method, and arguments', function(assert) {

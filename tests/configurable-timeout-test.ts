@@ -39,7 +39,7 @@ QUnit.test('We can use a custom setTimeout', function(assert) {
     }
   });
 
-  bb.setTimeout(() => {
+  bb.later(() => {
     assert.ok(bb.options._platform.isFakePlatform, 'we are using the fake platform');
     assert.ok(customNextWasUsed , 'custom later was used');
     done();
