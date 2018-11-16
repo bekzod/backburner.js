@@ -499,6 +499,15 @@ export default class Backburner {
       if (isImmediate) {
         this._join(target, method, args);
       }
+    } else if (index === 0) {
+      let methodIndex = 3;
+      let argIndex = 4;
+      this._timers[methodIndex] = null;
+      if (this._timers[argIndex] === DISABLE_SCHEDULE) {
+        args = DISABLE_SCHEDULE;
+      }
+
+      timerId = this._later(target, method, args, wait || this._timers[index]);
     } else {
       let executeAt = this._platform.now() + wait || this._timers[index];
       this._timers[index] = executeAt;
@@ -508,10 +517,6 @@ export default class Backburner {
         this._timers[argIndex] = args;
       }
       timerId = this._timers[index + 1];
-
-      if (index === 0) {
-        this._reinstallTimerTimeout();
-      }
     }
 
     return timerId;
@@ -714,9 +719,9 @@ export default class Backburner {
       let executeAt = timers[i];
       if (executeAt > n) { break; }
       let args = timers[i + 4];
-      if (args !== DISABLE_SCHEDULE) {
+      let method = timers[i + 3];
+      if (args !== DISABLE_SCHEDULE && method !== null) {
         let target = timers[i + 2];
-        let method = timers[i + 3];
         let stack = timers[i + 5];
         this.currentInstance!.schedule(defaultQueue, target, method, args, false, stack);
       }

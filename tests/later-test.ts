@@ -434,13 +434,13 @@ QUnit.test('debounce called before later', function(assert) {
 
   let done = assert.async(1);
   let bb = new Backburner(['one']);
-  let func = ()=> {};
+  let func = function() {};
 
   bb.run(() => {
     bb.debounce(func, 1000);
     setTimeout(function() {
       bb.debounce(func, 1000);
-    }, 50)
+    }, 50);
 
     let before = Date.now();
 
@@ -452,4 +452,3 @@ QUnit.test('debounce called before later', function(assert) {
   });
 
  });
-
